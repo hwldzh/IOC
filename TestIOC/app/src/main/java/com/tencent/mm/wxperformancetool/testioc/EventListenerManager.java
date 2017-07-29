@@ -7,6 +7,7 @@ import com.tencent.mm.wxperformancetool.testioc.annotation.Event;
 import com.tencent.mm.wxperformancetool.testioc.entity.ViewInfo;
 import com.tencent.mm.wxperformancetool.testioc.utils.ViewFinder;
 
+import org.xutils.common.util.DoubleKeyValueMap;
 import org.xutils.common.util.LogUtil;
 
 import java.lang.ref.WeakReference;
@@ -29,13 +30,22 @@ public final class EventListenerManager {
         AVOID_QUICK_EVENT_SET.add("onItemClick");
     }
 
+    /**
+     * k1: viewInjectInfo
+     * k2: interface Type
+     * value: listener
+     */
+    private final static DoubleKeyValueMap<ViewInfo, Class<?>, Object>
+            listenerCache = new DoubleKeyValueMap<ViewInfo, Class<?>, Object>();
+
     public static void addEventMethod(
             //根据页面或View hodler生成的ViewFinder
             ViewFinder finder,
             //根据当前注解ID生产的ViewInfo
             ViewInfo viewInfo,
             Event event,
-            Object handler) {
+            Object handler,
+            Method method) {
         try {
             View view = finder.findViewByInfo(viewInfo);
             if (view != null) {
@@ -44,10 +54,23 @@ public final class EventListenerManager {
                 if (TextUtils.isEmpty(listenerSetter)) {
                     listenerSetter = "set" + listenerType.getSimpleName();
                 }
-                DynamicHandler dynamicHandler = new DynamicHandler(handler);
-
-                Object listener = Proxy.newProxyInstance(
-                        listenerType.getClassLoader(), new Class<?>[]{listenerType}, dynamicHandler);
+                String methodName = event.method();
+                boolean addNewMethod = false;
+                Object listener = listenerCache.get(viewInfo, listenerType);
+                if (listener != null) {
+                    DynamicHandler dynamicHandler = (DynamicHandler) Proxy.getInvocationHandler(listener);
+                    addNewMethod = handler.equals(dynamicHandler.getHandler());
+                    if (addNewMethod) {
+                        dynamicHandler.addMethod(methodName, method);
+                    }
+                }
+                if (!addNewMethod) {
+                    DynamicHandler dynamicHandler = new DynamicHandler(handler);
+                    dynamicHandler.addMethod(methodName, method);
+                    listener = Proxy.newProxyInstance(
+                            listenerType.getClassLoader(), new Class<?>[]{listenerType}, dynamicHandler);
+                    listenerCache.put(viewInfo, listenerType, listener);
+                }
                 //相当于调用了View的set#***方法，比如说调用了View的setOnclicklistener方法，但是这里使用的是动态代理
                 Method setEventListenerMethod = view.getClass().getMethod(listenerSetter, listenerType);
                 setEventListenerMethod.invoke(view, listener);

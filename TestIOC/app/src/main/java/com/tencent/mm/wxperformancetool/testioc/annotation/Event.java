@@ -36,4 +36,11 @@ public @interface Event {
      * @return
      */
     String setter() default "";
+
+    /**
+     * 如果type的接口类型提供多个方法, 需要使用此参数指定方法名.
+     *
+     * @return
+     */
+    String method() default "";
 }
