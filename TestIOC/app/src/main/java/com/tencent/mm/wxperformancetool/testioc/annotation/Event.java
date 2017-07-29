@@ -30,4 +30,10 @@ public @interface Event {
      * @return
      */
     Class<?> type() default View.OnClickListener.class;
+
+    /**
+     * 事件的setter方法名, 默认为set+type#simpleName.
+     * @return
+     */
+    String setter() default "";
 }

@@ -5,9 +5,11 @@ import android.graphics.PorterDuff;
 import android.mtp.MtpConstants;
 import android.view.View;
 
+import com.tencent.mm.wxperformancetool.testioc.EventListenerManager;
 import com.tencent.mm.wxperformancetool.testioc.annotation.ContentView;
 import com.tencent.mm.wxperformancetool.testioc.annotation.Event;
 import com.tencent.mm.wxperformancetool.testioc.annotation.ViewInject;
+import com.tencent.mm.wxperformancetool.testioc.entity.ViewInfo;
 import com.tencent.mm.wxperformancetool.testioc.utils.ViewFinder;
 import com.tencent.mm.wxperformancetool.testioc.x;
 
@@ -126,7 +128,11 @@ public final class ViewInjectorImpl implements ViewInjector {
                     for (int i = 0; i < values.length; i++) {
                         int value = values[i];
                         if (value > 0) {
-
+                            ViewInfo viewInfo = new ViewInfo();
+                            viewInfo.value = value;
+                            viewInfo.parentId = parentIdLen > i ? parentIds[i] : 0;
+                            method.setAccessible(true);
+                            EventListenerManager.addEventMethod(finder, viewInfo, event, handler);
                         }
                     }
                 }

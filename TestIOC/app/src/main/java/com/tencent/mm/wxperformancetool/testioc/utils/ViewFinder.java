@@ -4,6 +4,8 @@ import android.animation.PropertyValuesHolder;
 import android.app.Activity;
 import android.view.View;
 
+import com.tencent.mm.wxperformancetool.testioc.entity.ViewInfo;
+
 
 /**
  * Created by willenhuang on 2017/7/28.
@@ -32,5 +34,9 @@ public class ViewFinder {
             return mActivity.findViewById(id);
         }
         return null;
+    }
+
+    public View findViewByInfo(ViewInfo viewInfo) {
+        return findViewById(viewInfo.value, viewInfo.parentId);
     }
 }
